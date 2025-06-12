@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Simulador Retiro/Pensión</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f9;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background-color: white;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: center;
+    }
+    th {
+      background-color: #007BFF;
+      color: white;
+    }
+    input[type="number"] {
+      width: 100px;
+      padding: 4px;
+    }
+    .readonly {
+      background-color: #eee;
+    }
+    .total-row td {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-size: 1.2em;
+      font-weight: bold;
+      background-color: #f0f8ff;
+    }
+    .footer {
+      margin-top: 20px;
+      font-size: 0.8em;
+      text-align: center;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <h1>Simulador Retiro / Pensión</h1>
+  <table id="tabla">
+    <thead>
+      <tr>
+        <th>Usar</th>
+        <th>Año</th>
+        <th>Pensión Inicial</th>
+        <th>INPC (%)</th>
+        <th>Pensión Correcta</th>
+        <th>Diferencia</th>
+        <th>Diferencia (12 meses)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Filas serán insertadas dinámicamente -->
+    </tbody>
+    <tfoot>
+      <tr class="total-row">
+        <td colspan="6">Total Retroactivo</td>
+        <td>$<span id="totalRetroactivo">0.00</span></td>
+      </tr>
+    </tfoot>
+  </table>
+
+  <script>
+    const inpcs = {
+      2012: 3.82, 2013: 3.57, 2014: 3.97, 2015: 4.08,
+      2016: 2.13, 2017: 3.36, 2018: 6.77, 2019: 4.83,
+      2020: 2.83, 2021: 3.15, 2022: 7.36, 2023: 7.82, 2024: 4.66
+    };
+
+    const tbody = document.querySelector('#tabla tbody');
+    const totalRetro = document.getElementById('totalRetroactivo');
+
+    let filas = [];
+
+    function crearFila(año) {
+      const tr = document.createElement('tr');
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.addEventListener('change', () => activarDesde(año));
+
+      const pensionInicial = document.createElement('input');
+      pensionInicial.type = 'number';
+      pensionInicial.disabled = true;
+      pensionInicial.classList.add('readonly');
+      pensionInicial.addEventListener('input', recalcular);
+
+      const pensionCorrecta = document.createElement('input');
+      pensionCorrecta.type = 'text';
+      pensionCorrecta.disabled = true;
+      pensionCorrecta.classList.add('readonly');
+
+      const diferencia = document.createElement('input');
+      diferencia.type = 'text';
+      diferencia.disabled = true;
+      diferencia.classList.add('readonly');
+
+      const diferencia12 = document.createElement('input');
+      diferencia12.type = 'text';
+      diferencia12.disabled = true;
+      diferencia12.classList.add('readonly');
+
+      tr.innerHTML = `
+        <td></td>
+        <td>${año}</td>
+        <td></td>
+        <td>${inpcs[año].toFixed(2)}</td>
+        <td></td>
+        <td></td>
+        <td></td>
+      `;
+
+      tr.children[0].appendChild(checkbox);
+      tr.children[2].appendChild(pensionInicial);
+      tr.children[4].appendChild(pensionCorrecta);
+      tr.children[5].appendChild(diferencia);
+      tr.children[6].appendChild(diferencia12);
+
+      tbody.appendChild(tr);
+      filas.push({ año, checkbox, pensionInicial, pensionCorrecta, diferencia, diferencia12 });
+    }
+
+    function activarDesde(añoSeleccionado) {
+      let activar = false;
+      filas.forEach(fila => {
+        if (fila.año === añoSeleccionado) activar = true;
+        fila.checkbox.checked = (fila.año === añoSeleccionado);
+        fila.pensionInicial.disabled = !activar;
+        fila.pensionInicial.classList.toggle('readonly', !activar);
+        if (!activar) fila.pensionInicial.value = '';
+      });
+      recalcular();
+    }
+
+    function formatNumber(num) {
+      return num.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function recalcular() {
+      let iniciar = false;
+      let valor = 0;
+      let total = 0;
+      filas.forEach((fila, index) => {
+        if (fila.checkbox.checked) {
+          iniciar = true;
+          valor = parseFloat(fila.pensionInicial.value) || 0;
+        }
+        if (iniciar) {
+          if (index > 0 && !fila.checkbox.checked) {
+            fila.pensionInicial.value = valor;
+          }
+
+          const inpc = inpcs[fila.año];
+          const correcta = +(valor * (1 + inpc / 100)).toFixed(2);
+          const diff = +(correcta - valor).toFixed(2);
+          const diff12 = +(diff * 12).toFixed(2);
+
+          fila.pensionCorrecta.value = formatNumber(correcta);
+          fila.diferencia.value = formatNumber(diff);
+          fila.diferencia12.value = formatNumber(diff12);
+
+          valor = correcta;
+          total += diff12;
+        } else {
+          fila.pensionCorrecta.value = '';
+          fila.diferencia.value = '';
+          fila.diferencia12.value = '';
+        }
+      });
+      totalRetro.textContent = formatNumber(total);
+    }
+
+    // Inicializar filas
+    Object.keys(inpcs).forEach(a => crearFila(Number(a)));
+  </script>
+
+  <div class="footer">
+    Página en desarrollo por David
+  </div>
+</body>
+</html>
