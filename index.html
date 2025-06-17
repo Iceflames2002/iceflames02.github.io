@@ -2,212 +2,60 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Simulador de Pensión</title>
+  <title>Inicio de Sesión</title>
   <style>
     body {
-      font-family: 'Segoe UI', sans-serif;
-      background: linear-gradient(to right, #e0eafc, #cfdef3);
-      margin: 0;
-      padding: 20px;
+      font-family: Arial, sans-serif;
+      background: #eef2f3;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
     }
-
-    h1 {
-      text-align: center;
-      color: #2c3e50;
-      margin-bottom: 30px;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background-color: white;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    .login-box {
+      background: white;
+      padding: 30px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
       border-radius: 8px;
-      overflow: hidden;
     }
-
-    th, td {
-      border: 1px solid #e1e1e1;
-      padding: 12px;
-      text-align: center;
+    input {
+      display: block;
+      margin: 10px 0;
+      padding: 8px;
+      width: 100%;
     }
-
-    th {
+    button {
       background-color: #3498db;
       color: white;
-      font-weight: 600;
-    }
-
-    input[type="number"], input[type="text"] {
-      width: 100px;
-      padding: 6px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      text-align: right;
-    }
-
-    input:disabled {
-      background-color: #f9f9f9;
-      color: #555;
-    }
-
-    .total-row td {
-      font-weight: bold;
-      background-color: #f6faff;
-      font-size: 1.1em;
-    }
-
-    .footer {
-      margin-top: 30px;
-      font-size: 0.9em;
-      text-align: center;
-      color: #7f8c8d;
-    }
-
-    .readonly {
-      background-color: #f4f4f4;
+      border: none;
+      padding: 10px;
+      cursor: pointer;
+      width: 100%;
     }
   </style>
 </head>
 <body>
-  <h1>Simulador de Actualización de Pensión</h1>
-
-  <table id="tabla">
-    <thead>
-      <tr>
-        <th>Usar</th>
-        <th>Año</th>
-        <th>Pensión Inicial</th>
-        <th>INPC (%)</th>
-        <th>Pensión Actualizada</th>
-        <th>Diferencia</th>
-        <th>Diferencia (12 meses)</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-    <tfoot>
-      <tr class="total-row">
-        <td colspan="6">Total Retroactivo</td>
-        <td>$<span id="totalRetroactivo">0.00</span></td>
-      </tr>
-    </tfoot>
-  </table>
+  <div class="login-box">
+    <h2>Iniciar Sesión</h2>
+    <input type="text" id="usuario" placeholder="Usuario">
+    <input type="password" id="clave" placeholder="Contraseña">
+    <button onclick="login()">Entrar</button>
+  </div>
 
   <script>
-    const inpcs = {
-      2012: 3.82, 2013: 3.57, 2014: 3.97, 2015: 4.08,
-      2016: 2.13, 2017: 3.36, 2018: 6.77, 2019: 4.83,
-      2020: 2.83, 2021: 3.15, 2022: 7.36, 2023: 7.82, 2024: 4.66
-    };
+    function login() {
+      const usuario = document.getElementById('usuario').value;
+      const clave = document.getElementById('clave').value;
 
-    const tbody = document.querySelector('#tabla tbody');
-    const totalRetro = document.getElementById('totalRetroactivo');
-    let filas = [];
-
-    function crearFila(año) {
-      const tr = document.createElement('tr');
-
-      const checkbox = document.createElement('input');
-      checkbox.type = 'checkbox';
-      checkbox.addEventListener('change', () => activarDesde(año));
-
-      const pensionInicial = document.createElement('input');
-      pensionInicial.type = 'number';
-      pensionInicial.disabled = true;
-      pensionInicial.min = "0";
-      pensionInicial.classList.add('readonly');
-      pensionInicial.addEventListener('input', recalcular);
-
-      const pensionCorrecta = document.createElement('input');
-      pensionCorrecta.type = 'text';
-      pensionCorrecta.disabled = true;
-
-      const diferencia = document.createElement('input');
-      diferencia.type = 'text';
-      diferencia.disabled = true;
-
-      const diferencia12 = document.createElement('input');
-      diferencia12.type = 'text';
-      diferencia12.disabled = true;
-
-      tr.innerHTML = `
-        <td></td>
-        <td>${año}</td>
-        <td></td>
-        <td>${inpcs[año].toFixed(2)}</td>
-        <td></td>
-        <td></td>
-        <td></td>
-      `;
-
-      tr.children[0].appendChild(checkbox);
-      tr.children[2].appendChild(pensionInicial);
-      tr.children[4].appendChild(pensionCorrecta);
-      tr.children[5].appendChild(diferencia);
-      tr.children[6].appendChild(diferencia12);
-
-      tbody.appendChild(tr);
-      filas.push({ año, checkbox, pensionInicial, pensionCorrecta, diferencia, diferencia12 });
+      // Aquí puedes poner cualquier lógica básica de validación
+      if (usuario === "admin" && clave === "1234") {
+        window.location.href = "simulador.html";
+      } else {
+        alert("Usuario o contraseña incorrectos.");
+      }
     }
-
-    function activarDesde(añoSeleccionado) {
-      let activar = false;
-      filas.forEach(fila => {
-        if (fila.año === añoSeleccionado) activar = true;
-        fila.checkbox.checked = (fila.año === añoSeleccionado);
-        fila.pensionInicial.disabled = !activar;
-        fila.pensionInicial.classList.toggle('readonly', !activar);
-        if (!activar) fila.pensionInicial.value = '';
-      });
-      recalcular();
-    }
-
-    function formatNumber(num) {
-      return num.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    }
-
-    function recalcular() {
-      let iniciar = false;
-      let valor = 0;
-      let total = 0;
-
-      filas.forEach((fila, index) => {
-        if (fila.checkbox.checked) {
-          iniciar = true;
-          valor = parseFloat(fila.pensionInicial.value) || 0;
-        }
-
-        if (iniciar && valor > 0) {
-          if (index > 0 && !fila.checkbox.checked) {
-            fila.pensionInicial.value = valor;
-          }
-
-          const inpc = inpcs[fila.año];
-          const correcta = +(valor * (1 + inpc / 100)).toFixed(2);
-          const diff = +(correcta - valor).toFixed(2);
-          const diff12 = +(diff * 12).toFixed(2);
-
-          fila.pensionCorrecta.value = formatNumber(correcta);
-          fila.diferencia.value = formatNumber(diff);
-          fila.diferencia12.value = formatNumber(diff12);
-
-          valor = correcta;
-          total += diff12;
-        } else {
-          fila.pensionCorrecta.value = '';
-          fila.diferencia.value = '';
-          fila.diferencia12.value = '';
-        }
-      });
-
-      totalRetro.textContent = formatNumber(total);
-    }
-
-    // Inicializar
-    Object.keys(inpcs).forEach(a => crearFila(Number(a)));
   </script>
-
-  <div class="footer">Página desarrollada por David – Simulador Pensión © 2025</div>
 </body>
 </html>
+
 
