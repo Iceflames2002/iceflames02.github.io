@@ -2,56 +2,76 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Simulador Retiro/Pensión</title>
+  <title>Simulador de Pensión</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background-color: #f4f4f9;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, #e0eafc, #cfdef3);
       margin: 0;
       padding: 20px;
     }
+
     h1 {
       text-align: center;
-      color: #333;
+      color: #2c3e50;
+      margin-bottom: 30px;
     }
+
     table {
       width: 100%;
       border-collapse: collapse;
       background-color: white;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
+      overflow: hidden;
     }
+
     th, td {
-      border: 1px solid #ddd;
-      padding: 8px;
+      border: 1px solid #e1e1e1;
+      padding: 12px;
       text-align: center;
     }
+
     th {
-      background-color: #007BFF;
+      background-color: #3498db;
       color: white;
+      font-weight: 600;
     }
-    input[type="number"] {
+
+    input[type="number"], input[type="text"] {
       width: 100px;
-      padding: 4px;
+      padding: 6px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      text-align: right;
     }
-    .readonly {
-      background-color: #eee;
+
+    input:disabled {
+      background-color: #f9f9f9;
+      color: #555;
     }
+
     .total-row td {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      font-size: 1.2em;
       font-weight: bold;
-      background-color: #f0f8ff;
+      background-color: #f6faff;
+      font-size: 1.1em;
     }
+
     .footer {
-      margin-top: 20px;
-      font-size: 0.8em;
+      margin-top: 30px;
+      font-size: 0.9em;
       text-align: center;
-      color: #666;
+      color: #7f8c8d;
+    }
+
+    .readonly {
+      background-color: #f4f4f4;
     }
   </style>
 </head>
 <body>
-  <h1>Simulador Retiro / Pensión</h1>
+  <h1>Simulador de Actualización de Pensión</h1>
+
   <table id="tabla">
     <thead>
       <tr>
@@ -59,14 +79,12 @@
         <th>Año</th>
         <th>Pensión Inicial</th>
         <th>INPC (%)</th>
-        <th>Pensión Correcta</th>
+        <th>Pensión Actualizada</th>
         <th>Diferencia</th>
         <th>Diferencia (12 meses)</th>
       </tr>
     </thead>
-    <tbody>
-      <!-- Filas serán insertadas dinámicamente -->
-    </tbody>
+    <tbody></tbody>
     <tfoot>
       <tr class="total-row">
         <td colspan="6">Total Retroactivo</td>
@@ -84,11 +102,11 @@
 
     const tbody = document.querySelector('#tabla tbody');
     const totalRetro = document.getElementById('totalRetroactivo');
-
     let filas = [];
 
     function crearFila(año) {
       const tr = document.createElement('tr');
+
       const checkbox = document.createElement('input');
       checkbox.type = 'checkbox';
       checkbox.addEventListener('change', () => activarDesde(año));
@@ -96,23 +114,21 @@
       const pensionInicial = document.createElement('input');
       pensionInicial.type = 'number';
       pensionInicial.disabled = true;
+      pensionInicial.min = "0";
       pensionInicial.classList.add('readonly');
       pensionInicial.addEventListener('input', recalcular);
 
       const pensionCorrecta = document.createElement('input');
       pensionCorrecta.type = 'text';
       pensionCorrecta.disabled = true;
-      pensionCorrecta.classList.add('readonly');
 
       const diferencia = document.createElement('input');
       diferencia.type = 'text';
       diferencia.disabled = true;
-      diferencia.classList.add('readonly');
 
       const diferencia12 = document.createElement('input');
       diferencia12.type = 'text';
       diferencia12.disabled = true;
-      diferencia12.classList.add('readonly');
 
       tr.innerHTML = `
         <td></td>
@@ -154,12 +170,14 @@
       let iniciar = false;
       let valor = 0;
       let total = 0;
+
       filas.forEach((fila, index) => {
         if (fila.checkbox.checked) {
           iniciar = true;
           valor = parseFloat(fila.pensionInicial.value) || 0;
         }
-        if (iniciar) {
+
+        if (iniciar && valor > 0) {
           if (index > 0 && !fila.checkbox.checked) {
             fila.pensionInicial.value = valor;
           }
@@ -181,15 +199,15 @@
           fila.diferencia12.value = '';
         }
       });
+
       totalRetro.textContent = formatNumber(total);
     }
 
-    // Inicializar filas
+    // Inicializar
     Object.keys(inpcs).forEach(a => crearFila(Number(a)));
   </script>
 
-  <div class="footer">
-    Página en desarrollo por David
-  </div>
+  <div class="footer">Página desarrollada por David – Simulador Pensión © 2025</div>
 </body>
 </html>
+
